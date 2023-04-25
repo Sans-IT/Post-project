@@ -18,8 +18,9 @@ import React, { ChangeEvent, useEffect, useRef, useState } from "react";
 import CardPost from "../components/CardPost";
 import { FiRefreshCcw } from "react-icons/fi";
 import { AddIcon } from "@chakra-ui/icons";
-import { supabase } from "@/utils/supabase";
+import { POSTNAMETABLE, POSTIMAGE, supabase } from "@/utils/supabase";
 import { useUser } from "@supabase/auth-helpers-react";
+import { v4 as uuidv4 } from "uuid";
 
 export default function Content() {
   const ref = useRef<HTMLButtonElement>(null);
@@ -30,27 +31,28 @@ export default function Content() {
 
   const [title, setTitle] = useState<string | null>();
   const [desc, setDesc] = useState<string | null>();
-  const [file, setFile] = useState<File>();
+  const [file, setFile] = useState<File | null>();
 
   const handlePost = async () => {
-    const filename: string = `${user?.id}-${Date.now()}`;
+    const RandomName: string = `${uuidv4()}`;
 
     if (ref.current) {
       ref.current.setAttribute("disabled", "disabled");
     }
 
-    const { data: postmedia } = await supabase.from("postmedia").insert({
+    const { data: postmedia } = await supabase.from(POSTNAMETABLE).insert({
       user_id: user?.id,
+      email: user?.email,
       user_name: user?.user_metadata.full_name,
       user_avatar: user?.user_metadata.avatar_url,
       title: title,
       description: desc,
-      image: filename,
+      image: `${user?.id}/${RandomName}`,
     });
 
     const { data } = await supabase.storage
-      .from("imagepost")
-      .upload(`${user?.id}/${filename}`, file as File);
+      .from(POSTIMAGE)
+      .upload(`${user?.id}/${RandomName}`, file as File);
 
     onClose();
   };
@@ -64,7 +66,10 @@ export default function Content() {
 
   useEffect(() => {
     const fetchPosts = async () => {
-      const { data } = await supabase.from("postmedia").select();
+      const { data } = await supabase
+        .from(POSTNAMETABLE)
+        .select()
+        .order("id", { ascending: false });
       setPosts(data);
     };
 
@@ -82,7 +87,7 @@ export default function Content() {
         </Button>
       </Flex>
       <Divider mb={5} />
-      <Flex flexDirection={"column"} gap={8}>
+      <Flex flexDirection={"column"} gap={8} mb="10">
         {posts
           ? posts.map((post: any) => {
               return <CardPost data={post} key={post.id} />;

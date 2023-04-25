@@ -7,6 +7,19 @@ import {
   Card,
   IconButton,
   Button,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuList,
+  Divider,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalOverlay,
+  useDisclosure,
 } from "@chakra-ui/react";
 import { FaComments, FaShare } from "react-icons/fa";
 import { AiFillLike } from "react-icons/ai";
@@ -14,50 +27,99 @@ import { HiDotsVertical } from "react-icons/hi";
 import React from "react";
 import Image from "next/image";
 import { useUser } from "@supabase/auth-helpers-react";
+import { POSTNAMETABLE, POSTIMAGE, supabase } from "@/utils/supabase";
 
 export default function CardPost({ data }: any) {
   const user = useUser();
-  const cdnPost: string = `https://dojkpsqarrtcdhxhsery.supabase.co/storage/v1/object/public/imagepost/${data.user_id}/`;
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const cdnPost: string = `https://dojkpsqarrtcdhxhsery.supabase.co/storage/v1/object/public/imagepost/`;
+
+  const handleDelete = async () => {
+    if (user?.id === data.user_id) {
+      const { data: deletelog } = await supabase
+        .from(POSTNAMETABLE)
+        .delete()
+        .eq("id", data.id);
+
+      const { data: storage } = await supabase.storage
+        .from(POSTIMAGE)
+        .remove([`${data.image}`]);
+    }
+  };
 
   return (
     <Card
       border={"1px"}
       borderColor={"blackAlpha.200"}
-      shadow={"2xl"}
+      shadow={"xl"}
       overflow={"hidden"}
     >
       <Flex flexDirection={"column"}>
+        {/* Header */}
         <Flex justifyContent={"space-between"} w={"full"} p={5}>
           <Flex alignItems={"center"} gap={3}>
-            <Avatar name={data.user_avatar} src={data.user_avatar} />
+            <Avatar
+              name={data.user_name === "" ? data.email : data.user_name}
+              src={data.user_avatar}
+            />
             <Box>
-              <Heading size="md">{data.user_name}</Heading>
+              <Heading size="md">
+                {data.user_name === "" ? data.email : data.user_name}
+              </Heading>
             </Box>
           </Flex>
-          {user?.id === data.user_id ? (
-            <IconButton
-              variant="ghost"
-              colorScheme="gray"
-              aria-label="See menu"
-              icon={<HiDotsVertical />}
-            />
+
+          {/* Three dot icon for option */}
+          {user?.email === data.email ? (
+            <>
+              <Menu>
+                <MenuButton>
+                  <IconButton
+                    as={Button}
+                    variant="ghost"
+                    colorScheme="gray"
+                    aria-label="See menu"
+                    icon={<HiDotsVertical />}
+                  />
+                </MenuButton>
+                <MenuList>
+                  <MenuItem>Edit</MenuItem>
+                  <Divider />
+                  <MenuItem color={"red.500"} onClick={onOpen}>
+                    Delete
+                  </MenuItem>
+                </MenuList>
+              </Menu>
+            </>
           ) : (
             ""
           )}
         </Flex>
+
+        {/* Image Section */}
         <Box p={5}>
-          <Heading size={"sm"}>{data.title}</Heading>
+          <Heading size={"sm"} mb={2}>
+            {data.title}
+          </Heading>
           <Text>{data.description}</Text>
         </Box>
-        <Box className="relative h-96">
+        <div className="relative overflow-hidden h-auto w-full aspect-square">
+          <Image
+            src={cdnPost + data.image}
+            alt={data.image}
+            fill
+            className="aspect-square blur-md"
+          />
           <Image
             src={cdnPost + data.image}
             alt={data.image}
             loading="lazy"
             fill
-            className="object-cover"
+            className="object-contain z-10"
           />
-        </Box>
+        </div>
+
+        {/* Footer */}
         <Flex
           justify="space-between"
           flexWrap="wrap"
@@ -79,6 +141,41 @@ export default function CardPost({ data }: any) {
           </Button>
         </Flex>
       </Flex>
+
+      {/* Modal Delete and Edit */}
+      <Modal isOpen={isOpen} onClose={onClose} isCentered>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>
+            Delete <span className="text-sky-500 font-bold">Postingan</span>
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            Yakin menghapus Postingan &ldquo;{data.title}&ldquo;?
+          </ModalBody>
+
+          <ModalFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                onClose();
+              }}
+              mr={3}
+            >
+              Tidak
+            </Button>
+            <Button
+              colorScheme="blue"
+              onClick={() => {
+                onClose();
+                handleDelete();
+              }}
+            >
+              Ya
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Card>
   );
 }

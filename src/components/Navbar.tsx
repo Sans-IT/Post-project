@@ -54,7 +54,15 @@ export default function Navbar() {
   };
 
   return (
-    <Box position={"fixed"} width={"100%"} bg={bgMode} zIndex={1000}>
+    <Box
+      position={"fixed"}
+      width={"100%"}
+      bg={bgMode}
+      zIndex={1000}
+      shadow={"lg"}
+      borderBottom={"1px"}
+      borderColor={"whiteAlpha.300"}
+    >
       <Flex
         justifyContent={"space-between"}
         alignItems={"center"}
