@@ -1,4 +1,4 @@
-import { ChevronDownIcon, SunIcon, MoonIcon } from "@chakra-ui/icons";
+import { SunIcon, MoonIcon } from "@chakra-ui/icons";
 import {
   Avatar,
   Box,
@@ -22,14 +22,18 @@ import {
 } from "@chakra-ui/react";
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react";
 import Link from "next/link";
-import React from "react";
+import { useRouter } from "next/router";
+import React, { useState } from "react";
 
 export default function Navbar() {
   const user = useUser();
   const supabase = useSupabaseClient();
+  const router = useRouter();
+  const [logOutChange, setOutLogChange] = useState<boolean | null>(false);
 
   const { colorMode, toggleColorMode } = useColorMode();
   const bgMode = useColorModeValue("gray.100", "gray.700");
+  const buttonMode = useColorModeValue("blackAlpha.100", "blackAlpha.500");
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const logInGoogle = async () => {
@@ -40,9 +44,17 @@ export default function Navbar() {
 
   const logOut = async () => {
     const { error } = await supabase.auth.signOut();
+    if (!logOutChange) {
+      router.push("/login");
+    } else {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+      });
+    }
   };
+
   return (
-    <Box position={"fixed"} width={"100%"} bg={bgMode}>
+    <Box position={"fixed"} width={"100%"} bg={bgMode} zIndex={1000}>
       <Flex
         justifyContent={"space-between"}
         alignItems={"center"}
@@ -53,37 +65,56 @@ export default function Navbar() {
           SANS<span className="font-normal">Media</span>
         </Link>
 
-        <Flex alignItems={"center"}>
-          <Button onClick={toggleColorMode} mr={2} colorScheme="gray">
+        <Flex alignItems={"center"} gap={3}>
+          <Button onClick={toggleColorMode} bg={buttonMode}>
             {colorMode == "dark" ? <SunIcon /> : <MoonIcon />}
           </Button>
 
           {user ? (
-            <Menu closeOnSelect={false}>
-              <MenuButton>
-                <Avatar
-                  src={user?.user_metadata?.picture}
-                  size={"md"}
-                  name={user?.email}
-                />
-              </MenuButton>
-              <MenuList>
-                <MenuItem>Profilku</MenuItem>
-                <MenuItem isDisabled>{user?.email}</MenuItem>
-                <Divider />
-                <MenuItem onClick={onOpen} color={"red.500"}>
-                  Logout
-                </MenuItem>
-              </MenuList>
-            </Menu>
+            <>
+              <Menu closeOnSelect={false}>
+                <MenuButton>
+                  <Avatar
+                    src={user?.user_metadata?.picture}
+                    size={"md"}
+                    name={user?.email}
+                  />
+                </MenuButton>
+                <MenuList>
+                  <MenuItem>Profilku</MenuItem>
+                  <MenuItem
+                    onClick={() => {
+                      onOpen();
+                      setOutLogChange(true);
+                    }}
+                    color={"coral"}
+                  >
+                    Ganti Akun
+                  </MenuItem>
+                  <MenuItem isDisabled>{user?.email}</MenuItem>
+                  <Divider />
+                  <MenuItem
+                    onClick={() => {
+                      onOpen();
+                      setOutLogChange(false);
+                    }}
+                    color={"red.500"}
+                  >
+                    Logout
+                  </MenuItem>
+                </MenuList>
+              </Menu>
+            </>
           ) : (
-            <Button onClick={() => void logInGoogle()}>Login</Button>
+            <Button onClick={() => void logInGoogle()} bg={buttonMode}>
+              Login
+            </Button>
           )}
         </Flex>
       </Flex>
 
       {/* Modal Popup when user Logout */}
-      <Modal isOpen={isOpen} onClose={onClose}>
+      <Modal isOpen={isOpen} onClose={onClose} isCentered>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>
