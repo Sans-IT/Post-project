@@ -14,7 +14,13 @@ import {
   Textarea,
   useDisclosure,
 } from "@chakra-ui/react";
-import React, { ChangeEvent, useEffect, useRef, useState } from "react";
+import React, {
+  ChangeEvent,
+  FormEvent,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import CardPost from "../components/CardPost";
 import { FiRefreshCcw } from "react-icons/fi";
 import { AddIcon } from "@chakra-ui/icons";
@@ -33,7 +39,8 @@ export default function Content() {
   const [desc, setDesc] = useState<string | null>();
   const [file, setFile] = useState<File | null>();
 
-  const handlePost = async () => {
+  const handlePost = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     const RandomName: string = `${uuidv4()}`;
 
     if (ref.current) {
@@ -47,13 +54,18 @@ export default function Content() {
       user_avatar: user?.user_metadata.avatar_url,
       title: title,
       description: desc,
-      image: `${user?.id}/${RandomName}`,
+      image: file?.name !== undefined ? user?.id + "/" + RandomName : "",
     });
 
-    const { data } = await supabase.storage
-      .from(POSTIMAGE)
-      .upload(`${user?.id}/${RandomName}`, file as File);
+    if (file?.name !== undefined) {
+      const { data } = await supabase.storage
+        .from(POSTIMAGE)
+        .upload(`${user?.id}/${RandomName}`, file as File);
+    }
 
+    setFile(null);
+    setTitle(null);
+    setDesc(null);
     onClose();
   };
 
@@ -96,47 +108,49 @@ export default function Content() {
       </Flex>
 
       {/* Post Modal */}
-      <Modal isOpen={isOpen} onClose={onClose} returnFocusOnClose={false}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Buat Post</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <Flex flexDirection={"column"} gap={5}>
-              <input
-                type="file"
-                accept="image/*"
-                name="filepost"
-                onChange={handleFileChange}
-              />
-              <Input
-                placeholder="Judul"
-                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                  setTitle(e.target.value)
-                }
-              />
-              <Textarea
-                placeholder="Deskripsi"
-                onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
-                  setDesc(e.target.value)
-                }
-              />
-            </Flex>
-          </ModalBody>
+      {user ? (
+        <Modal isOpen={isOpen} onClose={onClose} returnFocusOnClose={false}>
+          <form onSubmit={handlePost}>
+            <ModalOverlay />
+            <ModalContent>
+              <ModalHeader>Buat Post</ModalHeader>
+              <ModalCloseButton />
+              <ModalBody>
+                <Flex flexDirection={"column"} gap={5}>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    name="filepost"
+                    onChange={handleFileChange}
+                  />
+                  <Input
+                    placeholder="Judul"
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      setTitle(e.target.value)
+                    }
+                    isRequired
+                  />
+                  <Textarea
+                    placeholder="Deskripsi"
+                    onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+                      setDesc(e.target.value)
+                    }
+                    isRequired
+                  />
+                </Flex>
+              </ModalBody>
 
-          <ModalFooter>
-            <Button
-              colorScheme="blue"
-              onClick={() => {
-                handlePost();
-              }}
-              ref={ref}
-            >
-              Post
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+              <ModalFooter>
+                <Button colorScheme="blue" ref={ref} type="submit">
+                  Post
+                </Button>
+              </ModalFooter>
+            </ModalContent>
+          </form>
+        </Modal>
+      ) : (
+        ""
+      )}
     </Container>
   );
 }

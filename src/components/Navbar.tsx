@@ -36,12 +36,6 @@ export default function Navbar() {
   const buttonMode = useColorModeValue("blackAlpha.100", "blackAlpha.500");
   const { isOpen, onOpen, onClose } = useDisclosure();
 
-  const logInGoogle = async () => {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-    });
-  };
-
   const logOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (!logOutChange) {
@@ -114,8 +108,8 @@ export default function Navbar() {
               </Menu>
             </>
           ) : (
-            <Button onClick={() => void logInGoogle()} bg={buttonMode}>
-              Login
+            <Button onClick={() => router.push("/login")} bg={buttonMode}>
+              Sign In
             </Button>
           )}
         </Flex>

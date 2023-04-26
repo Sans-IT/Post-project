@@ -103,21 +103,26 @@ export default function CardPost({ data }: any) {
           </Heading>
           <Text>{data.description}</Text>
         </Box>
-        <div className="relative overflow-hidden h-auto w-full aspect-square">
-          <Image
-            src={cdnPost + data.image}
-            alt={data.image}
-            fill
-            className="aspect-square blur-md"
-          />
-          <Image
-            src={cdnPost + data.image}
-            alt={data.image}
-            loading="lazy"
-            fill
-            className="object-contain z-10"
-          />
-        </div>
+        {data.image !== "" ? (
+          <div className="relative overflow-hidden h-auto w-full">
+            <Image
+              src={cdnPost + data.image}
+              alt={data.image}
+              fill
+              className="blur-sm brightness-50 filter"
+            />
+            <Image
+              src={cdnPost + data.image}
+              alt={data.image}
+              loading="lazy"
+              width={350}
+              height={500}
+              className="object-contain m-auto z-10 relative"
+            />
+          </div>
+        ) : (
+          ""
+        )}
 
         {/* Footer */}
         <Flex
@@ -136,46 +141,60 @@ export default function CardPost({ data }: any) {
           <Button flex="1" variant="ghost" leftIcon={<FaComments />}>
             Comment
           </Button>
-          <Button flex="1" variant="ghost" leftIcon={<FaShare />}>
+          <Button
+            flex="1"
+            variant="ghost"
+            leftIcon={<FaShare />}
+            onClick={() => {
+              console.log(
+                navigator.clipboard.writeText(window.location.href + data.image)
+              );
+              navigator.clipboard.writeText(window.location.href + data.image);
+            }}
+          >
             Share
           </Button>
         </Flex>
       </Flex>
 
       {/* Modal Delete and Edit */}
-      <Modal isOpen={isOpen} onClose={onClose} isCentered>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>
-            Delete <span className="text-sky-500 font-bold">Postingan</span>
-          </ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            Yakin menghapus Postingan &ldquo;{data.title}&ldquo;?
-          </ModalBody>
+      {user?.email === data.email ? (
+        <Modal isOpen={isOpen} onClose={onClose} isCentered>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>
+              Delete <span className="text-sky-500 font-bold">Postingan</span>
+            </ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              Yakin menghapus Postingan &ldquo;{data.title}&ldquo;?
+            </ModalBody>
 
-          <ModalFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                onClose();
-              }}
-              mr={3}
-            >
-              Tidak
-            </Button>
-            <Button
-              colorScheme="blue"
-              onClick={() => {
-                onClose();
-                handleDelete();
-              }}
-            >
-              Ya
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+            <ModalFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  onClose();
+                }}
+                mr={3}
+              >
+                Tidak
+              </Button>
+              <Button
+                colorScheme="blue"
+                onClick={() => {
+                  onClose();
+                  handleDelete();
+                }}
+              >
+                Ya
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      ) : (
+        ""
+      )}
     </Card>
   );
 }
