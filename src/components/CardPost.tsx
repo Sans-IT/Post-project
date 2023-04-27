@@ -43,7 +43,7 @@ export default function CardPost({ data }: any) {
 
       const { data: storage } = await supabase.storage
         .from(POSTIMAGE)
-        .remove([`${data.image}`]);
+        .remove([`${data.source}`]);
     }
   };
 
@@ -103,22 +103,34 @@ export default function CardPost({ data }: any) {
           </Heading>
           <Text>{data.description}</Text>
         </Box>
-        {data.image !== "" ? (
+        {data.source !== "" ? (
           <div className="relative overflow-hidden h-auto w-full">
-            <Image
-              src={cdnPost + data.image}
-              alt={data.image}
-              fill
-              className="blur-sm brightness-50 filter"
-            />
-            <Image
-              src={cdnPost + data.image}
-              alt={data.image}
-              loading="lazy"
-              width={350}
-              height={500}
-              className="object-contain m-auto z-10 relative"
-            />
+            {data.type !== "video/mp4" ? (
+              <>
+                <Image
+                  src={cdnPost + data.source}
+                  alt={data.source}
+                  fill
+                  className="blur-sm brightness-50 filter"
+                />
+                <Image
+                  src={cdnPost + data.source}
+                  alt={data.source}
+                  loading="lazy"
+                  width={350}
+                  height={500}
+                  className="object-contain m-auto z-10 relative"
+                />
+              </>
+            ) : (
+              <video
+                width="320"
+                height="240"
+                controls
+                src={cdnPost + data.source}
+                className="object-contain m-auto w-full relative"
+              ></video>
+            )}
           </div>
         ) : (
           ""
@@ -147,9 +159,11 @@ export default function CardPost({ data }: any) {
             leftIcon={<FaShare />}
             onClick={() => {
               console.log(
-                navigator.clipboard.writeText(window.location.href + data.image)
+                navigator.clipboard.writeText(
+                  window.location.href + data.source
+                )
               );
-              navigator.clipboard.writeText(window.location.href + data.image);
+              navigator.clipboard.writeText(window.location.href + data.source);
             }}
           >
             Share

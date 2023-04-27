@@ -54,7 +54,8 @@ export default function Content() {
       user_avatar: user?.user_metadata.avatar_url,
       title: title,
       description: desc,
-      image: file?.name !== undefined ? user?.id + "/" + RandomName : "",
+      source: file?.name !== undefined ? user?.id + "/" + RandomName : "",
+      type: file?.type,
     });
 
     if (file?.name !== undefined) {
@@ -119,7 +120,7 @@ export default function Content() {
                 <Flex flexDirection={"column"} gap={5}>
                   <input
                     type="file"
-                    accept="image/*"
+                    accept="image/*,video/mp4"
                     name="filepost"
                     onChange={handleFileChange}
                   />
